@@ -92,6 +92,65 @@ public class TestPrime {
 		return rezultat;
 	}
 	
+	public static void solutieParalela3(long min, long max) throws InterruptedException {
+		int nrProcesoare = Runtime.getRuntime().availableProcessors();
+		System.out.println("Nr procesoare: " + nrProcesoare);
+		
+		ArrayList<ThreadPrimePas> fire = new ArrayList<>(nrProcesoare);
+		
+		for(int i = 0; i < nrProcesoare; i++) {
+			fire.add(new ThreadPrimePas(min + i, max, nrProcesoare));
+		}
+		
+		double tStart = System.currentTimeMillis();
+		for(ThreadPrimePas t : fire) {
+			t.start();
+		}
+		for(ThreadPrimePas t : fire) {
+			t.join();
+		}
+		double tFinal = System.currentTimeMillis();
+		
+		int rezultat = 0;
+		for(ThreadPrimePas t : fire) {
+			rezultat += t.getContor();
+		}
+		
+		System.out.printf("Nr prime: %d in %f secunde",
+				rezultat, (tFinal - tStart)/1000);
+	}
+	
+	public static void solutieParalela4(long min, long max) throws InterruptedException {
+		int nrProcesoare = Runtime.getRuntime().availableProcessors();
+		System.out.println("Nr procesoare: " + nrProcesoare);
+		
+		ArrayList<ThreadPrimePasImpar> fire = new ArrayList<>(nrProcesoare);
+		
+		if(min % 2 == 0) {
+			min = min + 1;
+		}
+		for(int i = 0; i < nrProcesoare; i++) {
+			fire.add(new ThreadPrimePasImpar(min + 2 * i, max, nrProcesoare));		
+		}
+		
+		double tStart = System.currentTimeMillis();
+		for(ThreadPrimePasImpar t : fire) {
+			t.start();
+		}
+		for(ThreadPrimePasImpar t : fire) {
+			t.join();
+		}
+		double tFinal = System.currentTimeMillis();
+		
+		int rezultat = 1; //pt a lua in calcul valoarea 2
+		for(ThreadPrimePasImpar t : fire) {
+			rezultat += t.getContor();
+		}
+		
+		System.out.printf("Nr prime: %d in %f secunde",
+				rezultat, (tFinal - tStart)/1000);
+	}
+	
 	public static void main(String args[]) throws InterruptedException {
 		
 		long N = (long)3e5;
@@ -107,5 +166,11 @@ public class TestPrime {
 		
 		System.out.println("Start solutie paralela cu variabile interne");
 		solutieParalela2(1, N);
+		
+		System.out.println("Start solutie paralela cu variabile interne si parcurgere cu pas");
+		solutieParalela3(1, N);
+		
+		System.out.println("Start solutie paralela cu variabile interne si parcurgere cu pas peste numere impare");
+		solutieParalela4(1, N);
 	}
 }
